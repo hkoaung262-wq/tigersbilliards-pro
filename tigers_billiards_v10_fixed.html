@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tigers Billiards - V10 Fixed</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        const firebaseConfig = {
+            apiKey: "AIzaSyCjuwcLDX_e-VujJvnS29PZY",
+            authDomain: "d-sayargyi-4f985.firebaseapp.com",
+            projectId: "d-sayargyi-4f985",
+            storageBucket: "d-sayargyi-4f985.firebasestorage.app",
+            messagingSenderId: "775609998529",
+            appId: "1:775609998529:web:b3e50a411626aaa7e20840"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.firebaseDB = db;
+        window.firebaseDoc = doc;
+        window.firebaseGetDoc = getDoc;
+        window.firebaseSetDoc = setDoc;
+        window.firebaseOnSnapshot = onSnapshot;
+    </script>
+    <style>
+        :root { --gold: #d4af37; --gold-bright: #f2d06b; --bg: #0b0d0f; --glass: rgba(255,255,255,0.05); --glass-border: rgba(255,255,255,0.1); --green: #00ff88; --red: #ff4757; --blue: #4a9eff; --text: #fff; }
+        * { box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; min-height: 100vh; }
+        .header { background: rgba(11,13,15,0.95); backdrop-filter: blur(15px); padding: 12px; border-bottom: 1px solid var(--glass-border); text-align: center; position: sticky; top: 0; z-index: 1000; }
+        .container { padding: 15px; padding-bottom: 100px; max-width: 600px; margin: 0 auto; }
+        .table-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; padding: 18px 12px; text-align: center; cursor: pointer; transition: 0.3s; position: relative; }
+        .card.active { border: 1px solid var(--gold); background: rgba(212,175,55,0.08); box-shadow: 0 0 20px rgba(212,175,55,0.15); }
+        .table-circle { width: 45px; height: 45px; border: 2px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: bold; color: var(--gold); font-size: 14px; }
+        .btn-gold { background: linear-gradient(135deg, var(--gold), var(--gold-bright)); color: #000; border: none; padding: 14px; border-radius: 14px; font-weight: bold; width: 100%; cursor: pointer; font-size: 1rem; }
+        .btn-outline { background: none; border: 1px solid var(--gold); color: var(--gold); padding: 8px 14px; border-radius: 20px; font-size: 10px; cursor: pointer; }
+        .btn-blue { background: linear-gradient(135deg, var(--blue), #6bb3ff); color: #000; border: none; padding: 14px; border-radius: 14px; font-weight: bold; width: 100%; cursor: pointer; font-size: 1rem; margin-top: 10px; }
+        .btn-red { background: linear-gradient(135deg, var(--red), #ff6b7a); color: #000; border: none; padding: 14px; border-radius: 14px; font-weight: bold; width: 100%; cursor: pointer; font-size: 1rem; margin-top: 10px; }
+        .btn-green { background: linear-gradient(135deg, var(--green), #6bffb3); color: #000; border: none; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 2000; overflow-y: auto; }
+        .nav-bar { padding: 12px 15px; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; gap: 10px; overflow-x: auto; }
+        .admin-card { background: var(--glass); border-radius: 18px; padding: 18px; border: 1px solid var(--glass-border); margin-bottom: 15px; }
+        input, select { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid #444; color: #fff; padding: 12px; border-radius: 10px; margin-top: 8px; font-size: 1rem; }
+        .excel-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
+        .excel-table th { background: #1a1a1a; color: var(--gold); padding: 8px; text-align: left; border: 1px solid #333; }
+        .excel-table td { padding: 8px; border: 1px solid #222; background: rgba(255,255,255,0.01); }
+        .fab { position: fixed; bottom: 25px; right: 20px; width: 55px; height: 55px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: black; font-size: 22px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); z-index: 1500; cursor: pointer; }
+        .qty-btn { background: #333; border: 1px solid #555; color: white; width: 25px; height: 25px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .flex-between { display: flex; justify-content: space-between; align-items: flex-end; }
+        .sync-status { position: fixed; top: 8px; right: 8px; padding: 4px 8px; border-radius: 8px; font-size: 9px; z-index: 3000; font-weight: bold; }
+        .sync-status.online { background: var(--green); color: #000; }
+        .sync-status.offline { background: var(--red); color: #fff; }
+        .sync-status.syncing { background: var(--gold); color: #000; }
+        .login-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 25px; padding: 35px 20px; text-align: center; max-width: 400px; margin: 40px auto; }
+        .role-btn { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; padding: 18px; margin: 8px 0; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 12px; }
+        .role-btn:hover { border-color: var(--gold); background: rgba(212,175,55,0.05); }
+        .role-btn i { font-size: 22px; color: var(--gold); width: 35px; }
+        .error-msg { color: var(--red); font-size: 12px; margin-top: 5px; }
+        .success-msg { color: var(--green); font-size: 12px; margin-top: 5px; }
+        .marker-card { background: rgba(74,158,255,0.05); border: 1px solid rgba(74,158,255,0.3); border-radius: 12px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .live-indicator { display: inline-block; width: 6px; height: 6px; background: var(--green); border-radius: 50%; margin-right: 5px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .device-tag { font-size: 9px; color: #666; margin-top: 3px; }
+        .leaderboard-card { background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(74,158,255,0.05)); border: 1px solid rgba(212,175,55,0.3); border-radius: 16px; padding: 15px; margin-bottom: 15px; }
+        .leaderboard-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .leaderboard-row:last-child { border-bottom: none; }
+        .rank-1 { color: var(--gold); font-weight: bold; }
+        .rank-2 { color: #c0c0c0; font-weight: bold; }
+        .rank-3 { color: #cd7f32; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div :class="['sync-status', syncStatus]">
+        <span v-if="syncStatus === 'online'" class="live-indicator"></span>
+        <i v-else class="fas" :class="syncStatus === 'syncing' ? 'fa-spinner fa-spin' : 'fa-wifi'"></i>
+        {{ syncStatus === 'online' ? 'LIVE' : syncStatus === 'syncing' ? 'SYNC' : 'OFF' }}
+    </div>
+
+    <!-- LOGIN -->
+    <div v-if="view === 'login'" class="overlay" style="display:flex; align-items:center; justify-content:center;">
+        <div class="login-card">
+            <div style="font-size:45px; color:var(--gold); margin-bottom:10px; opacity:0.7;">🎱</div>
+            <div style="margin-bottom:8px;">
+                <div style="font-family:'Cinzel',serif; font-size:2.2rem; font-weight:900; letter-spacing:6px; background:linear-gradient(135deg, var(--gold) 0%, #fff 50%, var(--gold) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">TIGERS</div>
+                <div style="font-family:'Cinzel',serif; color:var(--gold); font-size:0.9rem; letter-spacing:4px;">Billiard & Snooker Club</div>
+            </div>
+            <div style="color:#555; font-size:9px; letter-spacing:2px; margin-bottom:6px;">No 308, U Wisarra Road, 41 Ward, North Dagon, Yangon</div>
+            <div style="color:var(--gold-bright); font-size:11px; margin-bottom:25px; font-weight:600;"><i class="fas fa-phone-alt" style="margin-right:6px;"></i>09683493771</div>
+            <div v-if="loginStep === 'role'">
+                <div style="color:var(--gold); margin-bottom:12px; font-weight:bold; font-size:13px;">ဝင်ရောက်ရန် ရွေးချယ်ပါ</div>
+                <div @click="loginStep='admin'" class="role-btn"><i class="fas fa-user-shield"></i><div style="text-align:left;"><div style="font-weight:bold;">Admin / Manager</div><div style="font-size:11px; color:#888;">Full Access</div></div></div>
+                <div @click="loginStep='marker'" class="role-btn"><i class="fas fa-user"></i><div style="text-align:left;"><div style="font-weight:bold;">Marker (မာကာ)</div><div style="font-size:11px; color:#888;">Table Orders & Billing</div></div></div>
+            </div>
+            <div v-if="loginStep === 'admin'">
+                <button @click="loginStep='role'" style="background:none; border:none; color:var(--gold); margin-bottom:12px; cursor:pointer; font-size:12px;"><i class="fas fa-arrow-left"></i> Back</button>
+                <div style="color:var(--gold); margin-bottom:10px; font-weight:bold; font-size:13px;"><i class="fas fa-user-shield"></i> Admin Login</div>
+                <input type="password" v-model="loginPassword" placeholder="Admin Password" @keyup.enter="doAdminLogin">
+                <div v-if="loginError" class="error-msg"><i class="fas fa-exclamation-circle"></i> {{ loginError }}</div>
+                <button class="btn-gold" @click="doAdminLogin" style="margin-top:12px;">ဝင်ရောက်မည်</button>
+            </div>
+            <div v-if="loginStep === 'marker'">
+                <button @click="loginStep='role'" style="background:none; border:none; color:var(--gold); margin-bottom:12px; cursor:pointer; font-size:12px;"><i class="fas fa-arrow-left"></i> Back</button>
+                <div style="color:var(--gold); margin-bottom:10px; font-weight:bold; font-size:13px;"><i class="fas fa-user"></i> Marker Login</div>
+                <select v-model="selectedMarkerName"><option value="">မာကာ ရွေးချယ်ပါ</option><option v-for="m in markerUsers" :key="m.id" :value="m.name">{{ m.name }}</option></select>
+                <input type="password" v-model="loginPassword" placeholder="Password" style="margin-top:8px;" @keyup.enter="doMarkerLogin">
+                <div v-if="loginError" class="error-msg"><i class="fas fa-exclamation-circle"></i> {{ loginError }}</div>
+                <button class="btn-blue" @click="doMarkerLogin" style="margin-top:12px;">ဝင်ရောက်မည်</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HOME -->
+    <div v-if="view === 'home'">
+        <header class="header">
+            <div style="margin-bottom:4px;">
+                <div style="font-family:'Cinzel',serif; font-size:1.6rem; font-weight:900; letter-spacing:5px; background:linear-gradient(135deg, var(--gold) 0%, #fff 50%, var(--gold) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">TIGERS</div>
+                <div style="font-family:'Cinzel',serif; color:var(--gold); font-size:0.8rem; letter-spacing:3px;">Billiard & Snooker Club</div>
+            </div>
+            <div style="color:#555; font-size:8px; letter-spacing:2px;">No 308, U Wisarra Road, 41 Ward, North Dagon, Yangon</div>
+            <div style="color:var(--gold-bright); font-size:10px; margin-top:2px; font-weight:600;"><i class="fas fa-phone-alt" style="margin-right:5px; font-size:8px;"></i>09683493771</div>
+            <div style="display:flex; justify-content:center; gap:5px; margin-top:8px;">
+                <button v-if="isAdmin" @click="view = 'admin'; adminTab='report'" class="btn-outline">နေ့ချုပ်</button>
+                <button v-if="isAdmin" @click="view = 'admin'; adminTab='expense'" class="btn-outline">အသုံးပြုငွေ</button>
+                <button v-if="isAdmin" @click="view = 'admin'; adminTab='monthly'" class="btn-outline">လချုပ်</button>
+                <button v-if="!isAdmin" @click="view = 'marker-dash'" class="btn-outline">ကျွမ်းကျင်မှု</button>
+            </div>
+        </header>
+        <div class="container">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:0 5px;">
+                <div style="font-size:11px; color:#888;"><i class="fas fa-wifi" :style="{color: syncStatus === 'online' ? 'var(--green)' : 'var(--red)'}"></i> {{ syncStatus === 'online' ? 'Real-Time Sync' : syncStatus === 'syncing' ? 'Syncing...' : 'Offline' }}</div>
+                <div v-if="currentUser" style="font-size:11px; color:var(--gold);"><i class="fas" :class="isAdmin ? 'fa-user-shield' : 'fa-user'"></i> {{ currentUser.name }}</div>
+            </div>
+            <div class="table-grid">
+                <div v-for="t in tables" :key="t.id" 
+                     :class="['card', {active: t.status === 'busy'}]" 
+                     @click="openTable(t)">
+                    <div class="table-circle">{{ t.id }}</div>
+                    <div v-if="t.status === 'busy'">
+                        <div style="font-size:20px; font-weight:bold;">{{ formatTime(t.elapsed) }}</div>
+                        <div style="color:var(--gold); font-size:12px;">{{ t.total.toLocaleString() }} Ks</div>
+                        <div v-if="t.markerName" style="font-size:10px; color:var(--blue); margin-top:3px;"><i class="fas fa-user"></i> {{ t.markerName }}</div>
+                        <div v-if="t.deviceId && t.deviceId !== deviceId" class="device-tag" style="color:var(--red);"><i class="fas fa-user"></i> {{ t.markerName || 'Other' }}</div>
+                        <div v-else-if="t.deviceId" class="device-tag" style="color:var(--green);"><i class="fas fa-check"></i> My Table</div>
+                    </div>
+                    <div v-else style="color:#555; font-size:12px;">Available</div>
+                </div>
+                <div :class="['card', {active: specialOrder.status === 'busy'}]" @click="openTable(specialOrder)" style="grid-column: span 2; padding: 12px;">
+                    <div style="display:flex; justify-content:center; align-items:center; gap:8px;">
+                        <i class="fas fa-glass-whiskey" style="color:var(--gold);"></i>
+                        <span style="font-weight:bold; font-size:13px;">စားသောက်ကုန်/အအေး သီးသန့်မှာရန်</span>
+                    </div>
+                    <div v-if="specialOrder.status === 'busy'" style="color:var(--green); font-size:14px; margin-top:4px;">Total: {{ specialOrder.total.toLocaleString() }} Ks</div>
+                </div>
+            </div>
+        </div>
+        <div class="fab" @click="view = isAdmin ? 'admin' : 'marker-dash'"><i class="fas" :class="isAdmin ? 'fa-chart-line' : 'fa-clipboard-list'"></i></div>
+        <button @click="logout" style="position:fixed; bottom:25px; left:20px; width:45px; height:45px; background:#333; border:1px solid #555; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--red); font-size:16px; cursor:pointer; z-index:1500;"><i class="fas fa-sign-out-alt"></i></button>
+    </div>
+
+    <!-- MARKER DASH -->
+    <div v-if="view === 'marker-dash'" class="overlay">
+        <div class="nav-bar"><button @click="view = 'home'" style="background:none; border:none; color:white; min-width:30px;"><i class="fas fa-arrow-left"></i></button><span style="color:var(--gold); font-size:13px; font-weight:bold;"><i class="fas fa-user"></i> {{ currentUser?.name }} - Dashboard</span></div>
+        <div class="container">
+            <div class="admin-card" style="background:var(--blue); color:black; text-align:center;"><div style="font-size:11px; opacity:0.7;">ယနေ့ ငွေရှင်း ({{ currentUser?.name }})</div><div style="font-size:26px; font-weight:bold; margin-top:4px;">{{ markerTodayTotal.toLocaleString() }} Ks</div></div>
+            <h4 style="color:var(--gold); margin-bottom:5px; font-size:13px;"><i class="fas fa-history"></i> ယနေ့ စာရင်း</h4>
+            <div class="admin-card" style="padding:0; overflow:hidden;">
+                <table class="excel-table"><thead><tr><th>ခုံ</th><th>အချိန်</th><th>ကြာချိန်</th><th>ခုံခ</th><th>အအေး</th><th>စုစုပေါင်း</th></tr></thead>
+                <tbody><tr v-for="h in markerTodayHistory" :key="h.id"><td>{{ h.tableId }}</td><td>{{ h.start }}-{{ h.end }}</td><td>{{ formatTime(h.elapsed) }}</td><td>{{ h.billiardOnly.toLocaleString() }}</td><td>{{ (h.amount - h.billiardOnly).toLocaleString() }}</td><td style="font-weight:bold;">{{ h.amount.toLocaleString() }}</td></tr><tr v-if="markerTodayHistory.length === 0"><td colspan="6" style="text-align:center; color:#666;">ယနေ့ စာရင်းမရှိသေးပါ</td></tr></tbody>
+                </table>
+            </div>
+            <h4 style="color:var(--gold); margin-bottom:5px; margin-top:15px; font-size:13px;"><i class="fas fa-chart-bar"></i> ကိုယ်ပိုင် စာရင်းအချုပ်</h4>
+            <div class="admin-card" style="padding:0; overflow:hidden;">
+                <table class="excel-table"><thead><tr><th>ရက်စွဲ</th><th>စာရင်းအရေအတွက်</th><th>စုစုပေါင်း</th></tr></thead>
+                <tbody><tr v-for="(day, date) in markerDailySummary" :key="date"><td>{{ date }}</td><td>{{ day.count }}</td><td style="font-weight:bold;">{{ day.total.toLocaleString() }}</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN -->
+    <div v-if="view === 'admin'" class="overlay">
+        <div class="nav-bar"><button @click="view = 'home'" style="background:none; border:none; color:white; min-width:30px;"><i class="fas fa-times"></i></button><span @click="adminTab = 'report'" :style="{color: adminTab==='report'?'var(--gold)':'#888'}" style="cursor:pointer; font-size:11px;">နေ့ချုပ်</span><span @click="adminTab = 'expense'" :style="{color: adminTab==='expense'?'var(--gold)':'#888'}" style="cursor:pointer; font-size:11px;">အသုံးပြုငွေ</span><span @click="adminTab = 'monthly'" :style="{color: adminTab==='monthly'?'var(--gold)':'#888'}" style="cursor:pointer; font-size:11px;">လချုပ်</span><span @click="adminTab = 'users'" :style="{color: adminTab==='users'?'var(--gold)':'#888'}" style="cursor:pointer; font-size:11px;"><i class="fas fa-users"></i> မာကာ</span><span @click="adminTab = 'settings'" :style="{color: adminTab==='settings'?'var(--gold)':'#888'}" style="cursor:pointer; font-size:11px;">ပြင်ဆင်ရန်</span></div>
+
+        <div v-if="adminTab === 'report'" class="container">
+            <div class="admin-card"><input type="date" v-model="filterDate"></div>
+            <button @click="exportToExcel" class="btn-gold" style="margin-bottom:12px; background:var(--green); color:#000; font-size:13px;"><i class="fas fa-file-excel"></i> Excel (CSV) ထုတ်ယူမည်</button>
+            <div class="admin-card" style="background:var(--gold); color:black; text-align:center;"><div style="font-weight:bold; font-size:16px;">ယနေ့ဝင်ငွေ - {{ filteredTotal.toLocaleString() }} Ks</div></div>
+            
+            <!-- MARKER LEADERBOARD -->
+            <div v-if="Object.keys(markerLeaderboard).length > 0" class="leaderboard-card">
+                <h4 style="color:var(--gold); margin:0 0 10px 0; font-size:14px;"><i class="fas fa-trophy"></i> မာကာ Leaderboard</h4>
+                <div v-for="(data, name, index) in markerLeaderboard" :key="name" class="leaderboard-row">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span :class="'rank-' + (index + 1)" style="font-size:16px; width:20px;">
+                            <i v-if="index === 0" class="fas fa-crown"></i>
+                            <i v-else-if="index === 1" class="fas fa-medal"></i>
+                            <i v-else-if="index === 2" class="fas fa-award"></i>
+                            <span v-else>{{ index + 1 }}</span>
+                        </span>
+                        <div>
+                            <div style="font-weight:bold; font-size:13px;" :style="{color: index === 0 ? 'var(--gold)' : '#fff'}">{{ name }}</div>
+                            <div style="font-size:10px; color:#888;">{{ data.count }} မှတ်တမ်း</div>
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-weight:bold; color:var(--green); font-size:14px;">{{ data.total.toLocaleString() }} Ks</div>
+                        <div style="font-size:9px; color:#888;">ခုံ: {{ data.billiard.toLocaleString() }} | အအေး: {{ data.items.toLocaleString() }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-between"><h4 style="color:var(--gold); margin-bottom:5px; font-size:13px;">ခုံဖိုးစာရင်း</h4><div style="font-size:10px; color:var(--gold-bright); margin-bottom:5px;">Daily Total: {{ dailyBilliardTotal.toLocaleString() }} Ks</div></div>
+            <div class="admin-card" style="padding:0; overflow:hidden;">
+                <table class="excel-table"><thead><tr><th>ခုံ</th><th>မာကာ</th><th>Device</th><th>အချိန်</th><th>ကြာချိန်</th><th>ခုံခ</th><th></th></tr></thead>
+                <tbody><tr v-for="h in sortedHistory" :key="h.id"><td>{{ h.tableId }}</td><td style="color:var(--blue);">{{ h.markerName || '-' }}</td><td style="font-size:9px; color:#666;">{{ h.deviceId ? h.deviceId.substring(0,6) : '-' }}</td><td>{{ h.start }}-{{ h.end }}</td><td>{{ formatTime(h.elapsed) }}</td><td>{{ h.billiardOnly.toLocaleString() }}</td><td><i @click="deleteHistory(h.id)" class="fas fa-trash" style="color:var(--red); cursor:pointer;"></i></td></tr></tbody>
+                </table>
+            </div>
+            <div class="flex-between" style="margin-top:10px;"><h4 style="color:var(--gold); margin-bottom:5px; font-size:13px;">အအေး/အစားအသောက်</h4><div style="font-size:10px; color:var(--gold-bright); margin-bottom:5px;">Daily Total: {{ dailyItemTotal.toLocaleString() }} Ks</div></div>
+            <div class="admin-card" style="padding:0; overflow:hidden;"><table class="excel-table"><thead><tr><th>အမည်</th><th>အရေအတွက်</th><th>ကျသင့်ငွေ</th></tr></thead><tbody><tr v-for="(val, key) in itemSummary" :key="key"><td>{{ key }}</td><td>{{ val.qty }}</td><td>{{ val.total.toLocaleString() }}</td></tr></tbody></table></div>
+        </div>
+
+        <div v-if="adminTab === 'expense'" class="container">
+            <div class="admin-card"><h4 style="margin:0; color:var(--gold); font-size:14px;">အသုံးပြုငွေထည့်ရန်</h4><input type="date" v-model="newExpense.date"><input type="text" v-model="newExpense.title" placeholder="အကြောင်းအရာ"><input type="number" v-model="newExpense.amount" placeholder="ငွေပမာဏ"><button class="btn-gold" @click="addExpense" style="margin-top:10px;">သိမ်းမည်</button></div>
+            <div class="admin-card" style="padding:0; overflow-x:auto;"><table class="excel-table"><thead><tr><th>ရက်စွဲ</th><th>အကြောင်းအရာ</th><th>ငွေပမာဏ</th><th></th></tr></thead><tbody><tr v-for="(ex, i) in expenses" :key="i"><td>{{ ex.date }}</td><td>{{ ex.title }}</td><td>{{ ex.amount.toLocaleString() }}</td><td><i @click="deleteExpense(i)" class="fas fa-trash" style="color:var(--red);"></i></td></tr></tbody></table></div>
+        </div>
+
+        <div v-if="adminTab === 'monthly'" class="container">
+            <div class="admin-card"><h4 style="margin:0; color:var(--gold); font-size:14px;">လချုပ်သိမ်းရန်</h4><div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"><div><label style="font-size:10px;">လရွေးပါ</label><input type="month" v-model="monthlyData.month"></div><div><label style="font-size:10px;">ဝန်ထမ်းကြေး</label><input type="number" v-model="monthlyData.staff"></div><div><label style="font-size:10px;">မီတာခ</label><input type="number" v-model="monthlyData.meter"></div></div><button class="btn-gold" @click="saveMonthly" style="margin-top:10px;">လချုပ်တွက်မည်</button></div>
+            <div class="admin-card" style="padding:0; overflow-x:auto;"><table class="excel-table"><thead><tr><th>လ</th><th>ခုံ (+)</th><th>အအေး (+)</th><th>အသုံး (-)</th><th>အမြတ်</th><th></th></tr></thead><tbody><tr v-for="(m, i) in monthlyHistory" :key="i"><td>{{ m.month }}</td><td>{{ m.billiard.toLocaleString() }}</td><td>{{ m.items.toLocaleString() }}</td><td>{{ m.expense.toLocaleString() }}</td><td :style="{color: m.profit >= 0 ? 'var(--green)' : 'var(--red)'}">{{ m.profit.toLocaleString() }}</td><td><i @click="deleteMonthly(i)" class="fas fa-trash" style="color:var(--red);"></i></td></tr></tbody></table></div>
+        </div>
+
+        <div v-if="adminTab === 'users'" class="container">
+            <div class="admin-card"><h4 style="margin:0; color:var(--gold); font-size:14px;"><i class="fas fa-user-plus"></i> မာကာ အကောင့်သစ်</h4><input type="text" v-model="newMarker.name" placeholder="မာကာနာမည်"><input type="password" v-model="newMarker.password" placeholder="Password"><button class="btn-blue" @click="addMarker" style="margin-top:10px;"><i class="fas fa-plus"></i> မာကာထည့်မည်</button><div v-if="markerMsg" :class="markerMsg.type + '-msg'" style="margin-top:8px;"><i class="fas" :class="markerMsg.type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'"></i> {{ markerMsg.text }}</div></div>
+            <h4 style="color:var(--gold); margin-bottom:8px; font-size:13px;"><i class="fas fa-users"></i> မာကာစာရင်း ({{ markerUsers.length }}/4)</h4>
+            <div v-for="m in markerUsers" :key="m.id" class="marker-card"><div><div style="font-weight:bold; font-size:13px;"><i class="fas fa-user" style="color:var(--blue); margin-right:5px;"></i> {{ m.name }}</div><div style="font-size:10px; color:#888;">ID: {{ m.id }}</div></div><button @click="deleteMarker(m.id)" style="background:none; border:none; color:var(--red); cursor:pointer; font-size:14px;"><i class="fas fa-trash"></i></button></div>
+            <div v-if="markerUsers.length === 0" style="text-align:center; color:#666; padding:20px;"><i class="fas fa-users" style="font-size:28px; opacity:0.3;"></i><div style="margin-top:8px; font-size:12px;">မာကာအကောင့်မရှိသေးပါ</div></div>
+            <div class="admin-card" style="margin-top:15px; background:rgba(255,71,87,0.05);"><h4 style="margin:0; color:var(--red); font-size:14px;"><i class="fas fa-lock"></i> Admin Password ပြောင်းရန်</h4><input type="password" v-model="adminPasswordChange.current" placeholder="လက်ရှိ Password"><input type="password" v-model="adminPasswordChange.new" placeholder="Password အသစ်"><input type="password" v-model="adminPasswordChange.confirm" placeholder="အသစ်ကို ထပ်ဖြည့်ပါ"><button class="btn-red" @click="changeAdminPassword" style="margin-top:10px;"><i class="fas fa-key"></i> Password ပြောင်းမည်</button><div v-if="adminPwMsg" :class="adminPwMsg.type + '-msg'" style="margin-top:8px;">{{ adminPwMsg.text }}</div></div>
+        </div>
+
+        <div v-if="adminTab === 'settings'" class="container">
+            <div class="admin-card"><label style="font-size:12px;">နာရီနှုန်း</label><input type="number" v-model="settings.rate"><div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;"><div><label style="font-size:10px;">HH Start</label><input type="time" v-model="settings.hStart"></div><div><label style="font-size:10px;">HH End</label><input type="time" v-model="settings.hEnd"></div></div><label style="margin-top:10px; display:block; font-size:12px;">HH Discount (%)</label><input type="number" v-model="settings.disPercent"><button class="btn-gold" @click="saveSettings" style="margin-top:12px;">SAVE</button></div>
+            <div class="admin-card"><h4 style="color:var(--gold); font-size:14px;">Menu Manager</h4><input type="text" v-model="newItem.name" placeholder="အမည်"><input type="number" v-model="newItem.price" placeholder="ဈေးနှုန်း"><button class="btn-gold" @click="addNewItem" style="margin-top:10px; background:var(--green); font-size:13px;">ADD</button><div v-for="(m, i) in menu" :key="i" style="display:flex; justify-content:space-between; padding:8px; background:rgba(255,255,255,0.05); margin-top:5px; border-radius:10px; font-size:13px;"><span>{{ m.name }} ({{ m.price }})</span><i @click="deleteMenuItem(i)" class="fas fa-trash" style="color:var(--red);"></i></div></div>
+            <div class="admin-card"><h4 style="color:var(--gold); font-size:14px;"><i class="fas fa-cloud"></i> Cloud Sync</h4><div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;"><button class="btn-green" @click="pushToCloud" style="font-size:12px;"><i class="fas fa-upload"></i> Push to Cloud</button><button class="btn-blue" @click="pullFromCloud" style="font-size:12px;"><i class="fas fa-download"></i> Pull from Cloud</button></div><div style="font-size:10px; color:#888; margin-top:8px;">Last synced: {{ lastSyncTime || 'Never' }}</div><div style="font-size:10px; color:#666; margin-top:4px;">Device ID: {{ deviceId.substring(0,8) }}</div></div>
+        </div>
+    </div>
+
+    <!-- ORDER -->
+    <div v-if="view === 'order'" class="overlay">
+        <div class="nav-bar"><button @click="view='home'" style="background:none; border:none; color:white;"><i class="fas fa-arrow-left"></i></button><h3 style="margin:0; font-size:16px;">{{ activeTable.id }}</h3></div>
+        <div class="container">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;"><div v-for="m in menu" :key="m.name" @click="addItem(m)" class="card" style="padding:12px;"><div style="font-size:13px;">{{ m.name }}</div><div style="color:var(--gold); font-size:13px;">{{ m.price.toLocaleString() }}</div></div></div>
+            <div class="admin-card">
+                <div v-for="(o, index) in activeTable.orders" :key="index" style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #333;"><div style="flex:1; font-size:13px;">{{ o.name }}</div><div style="display:flex; align-items:center; gap:8px; flex:1; justify-content:center;"><button class="qty-btn" @click="adjustQty(index, -1)">-</button><span style="font-weight:bold; color:var(--gold);">{{ o.qty }}</span><button class="qty-btn" @click="adjustQty(index, 1)">+</button></div><div style="flex:1; text-align:right; font-size:13px;">{{ (o.price * o.qty).toLocaleString() }}</div></div>
+                <div style="margin-top:15px; font-weight:bold; display:flex; justify-content:space-between; font-size:1.1rem;"><span>Total:</span><span style="color:var(--green);">{{ activeTable.total.toLocaleString() }} Ks</span></div>
+                <button class="btn-gold" @click="goBill" style="margin-top:15px; background:var(--green);">ဘေလ်ရှင်းမည်</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BILL -->
+    <div v-if="view === 'bill'" class="overlay">
+        <div class="container">
+            <div style="background:#fff; color:#000; padding:20px; border-radius:5px; font-family:monospace;">
+                <center><div style="font-weight:bold; font-size:18px;">TIGERS</div></center>
+                <center><div style="font-size:11px; font-weight:bold;">Billiard & Snooker Club</div></center>
+                <center><div style="font-size:8px; color:#666; margin-top:3px;">No 308, U Wisarra Road, 41 Ward, North Dagon</div></center>
+                <center><div style="font-size:8px; color:#666;">Ph: 09683493771</div></center>
+                <div style="margin-top:8px; font-size:11px;">{{ activeTable.id }} | {{ getTodayDate() }}</div>
+                <div style="font-size:10px; color:#666;">Marker: {{ activeTable.markerName || (currentUser ? currentUser.name : '') }}</div>
+                <hr style="border-color:#ddd;">
+                <div v-for="o in activeTable.orders" :key="o.name" style="display:flex; justify-content:space-between; font-size:12px;"><span>{{ o.name }} x{{ o.qty }}</span><span>{{ (o.price * o.qty).toLocaleString() }}</span></div>
+                <div v-if="activeTable.id !== 'Order Only'" style="display:flex; justify-content:space-between; font-size:12px;"><span>ခုံဖိုး ({{ formatTime(activeTable.elapsed) }})</span><span>{{ activeTable.billiardCost.toLocaleString() }}</span></div>
+                <hr style="border-color:#ddd;">
+                <div style="font-weight:bold; font-size:18px; text-align:right;">TOTAL: {{ activeTable.total.toLocaleString() }} Ks</div>
+            </div>
+            <button class="btn-gold" @click="confirmCheckout" style="margin-top:15px;">ငွေလက်ခံရရှိပြီ</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+const { createApp } = Vue;
+const Obfuscate = {
+    encode(str) { if (!str) return ''; return btoa(str.split('').reverse().join('')); },
+    decode(str) { if (!str) return ''; try { return atob(str).split('').reverse().join(''); } catch { return ''; } }
+};
+const getDeviceId = () => {
+    let id = localStorage.getItem('tiger_device_id');
+    if (!id) { id = 'dev_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36); localStorage.setItem('tiger_device_id', id); }
+    return id;
+};
+
+createApp({
+    data() {
+        const savedUsers = JSON.parse(localStorage.getItem('tiger_v80_users'));
+        const defaultUsers = { admin: { id: 'admin', name: 'Manager', password: Obfuscate.encode('tigers2024'), role: 'admin' }, markers: [] };
+        const users = savedUsers || defaultUsers;
+        return {
+            view: 'login', loginStep: 'role', loginPassword: '', selectedMarkerName: '', loginError: '', currentUser: null,
+            deviceId: getDeviceId(), users: users, newMarker: { name: '', password: '' }, markerMsg: null,
+            adminPasswordChange: { current: '', new: '', confirm: '' }, adminPwMsg: null,
+            adminTab: 'report', activeTable: null, filterDate: new Date().toISOString().split('T')[0],
+            newExpense: { date: new Date().toISOString().split('T')[0], title: '', amount: null },
+            newItem: { name: '', price: null }, monthlyData: { month: '', staff: 0, meter: 0 },
+            settings: JSON.parse(localStorage.getItem('tiger_v71_set')) || { rate: 3000, hStart: "09:00", hEnd: "14:00", disPercent: 50 },
+            menu: JSON.parse(localStorage.getItem('tiger_v71_menu')) || [{name:'Shark', price:1500}, {name:'M150', price:1200}],
+            tables: Array.from({length: 4}, (_, i) => ({id:'T'+(i+1), status:'idle', elapsed:0, orders:[], billiardCost:0, total:0, startTime:'', markerName:'', deviceId:''})),
+            specialOrder: {id:'Order Only', status:'idle', elapsed:0, orders:[], billiardCost:0, total:0, startTime:'', markerName:'', deviceId:''},
+            history: JSON.parse(localStorage.getItem('tiger_v71_hist')) || [],
+            expenses: JSON.parse(localStorage.getItem('tiger_v71_exp')) || [],
+            monthlyHistory: JSON.parse(localStorage.getItem('tiger_v71_month')) || [],
+            syncStatus: 'offline', lastSyncTime: null, db: null, timerInterval: null, tableListener: null, dataListener: null
+        };
+    },
+    computed: {
+        isAdmin() { return this.currentUser && this.currentUser.role === 'admin'; },
+        markerUsers() { return this.users.markers || []; },
+        filteredHistory() { return this.history.filter(h => h.rawDate === this.filterDate); },
+        sortedHistory() { return [...this.filteredHistory].sort((a, b) => a.tableId.localeCompare(b.tableId)); },
+        filteredTotal() { return this.filteredHistory.reduce((s, h) => s + h.amount, 0); },
+        dailyBilliardTotal() { return this.filteredHistory.reduce((s, h) => s + h.billiardOnly, 0); },
+        dailyItemTotal() { let total = 0; this.filteredHistory.forEach(h => { if(h.items) h.items.forEach(i => total += (i.price * i.qty)); }); return total; },
+        itemSummary() { let res = {}; this.filteredHistory.forEach(h => { if(h.items) h.items.forEach(i => { if(!res[i.name]) res[i.name] = {qty:0, total:0}; res[i.name].qty += i.qty; res[i.name].total += (i.price * i.qty); }); }); return res; },
+        markerTodayHistory() { if (!this.currentUser) return []; return this.history.filter(h => h.rawDate === this.filterDate && h.markerName === this.currentUser.name); },
+        markerTodayTotal() { return this.markerTodayHistory.reduce((s, h) => s + h.amount, 0); },
+        markerDailySummary() { if (!this.currentUser) return {}; let summary = {}; this.history.forEach(h => { if (h.markerName === this.currentUser.name) { if (!summary[h.rawDate]) summary[h.rawDate] = { count: 0, total: 0 }; summary[h.rawDate].count++; summary[h.rawDate].total += h.amount; } }); return summary; },
+        markerLeaderboard() {
+            const board = {};
+            this.filteredHistory.forEach(h => {
+                const name = h.markerName || 'မသိ';
+                if (!board[name]) board[name] = { count: 0, billiard: 0, items: 0, total: 0 };
+                board[name].count++;
+                board[name].billiard += h.billiardOnly;
+                board[name].items += (h.amount - h.billiardOnly);
+                board[name].total += h.amount;
+            });
+            const sorted = Object.entries(board).sort((a, b) => b[1].total - a[1].total);
+            const result = {};
+            sorted.forEach(([name, data]) => { result[name] = data; });
+            return result;
+        }
+    },
+    methods: {
+        getTodayDate() { return new Date().toLocaleDateString('en-GB'); },
+        getCurrentTime() { return new Date().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', hour12:true}); },
+        formatTime(s) { return Math.floor(s/60) + ":" + String(s%60).padStart(2,'0'); },
+        doAdminLogin() { const admin = this.users.admin; if (Obfuscate.decode(admin.password) === this.loginPassword) { this.currentUser = { ...admin, password: null }; this.loginPassword = ''; this.loginError = ''; this.view = 'home'; } else { this.loginError = 'Password မမှန်ပါ'; } },
+        doMarkerLogin() { if (!this.selectedMarkerName) { this.loginError = 'မာကာ ရွေးချယ်ပါ'; return; } const marker = this.users.markers.find(m => m.name === this.selectedMarkerName); if (!marker) { this.loginError = 'မာကာမတွေ့ပါ'; return; } if (Obfuscate.decode(marker.password) === this.loginPassword) { this.currentUser = { ...marker, password: null }; this.loginPassword = ''; this.loginError = ''; this.view = 'home'; } else { this.loginError = 'Password မမှန်ပါ'; } },
+        logout() { if (confirm('အကောင့်မှ ထွက်ရန် သေချာပါသလား?')) { this.currentUser = null; this.view = 'login'; this.loginStep = 'role'; this.loginPassword = ''; this.selectedMarkerName = ''; } },
+        addMarker() { if (!this.newMarker.name || !this.newMarker.password) { this.markerMsg = { type: 'error', text: 'နာမည် နှင့် Password ဖြည့်ပါ' }; return; } if (this.users.markers.length >= 4) { this.markerMsg = { type: 'error', text: 'မာကာ 4 ယောက်ထက်မပိုနိုင်ပါ' }; return; } if (this.users.markers.find(m => m.name === this.newMarker.name)) { this.markerMsg = { type: 'error', text: 'ဒီနာမည်နဲ့ မာကာရှိပြီးသားပါ' }; return; } this.users.markers.push({ id: 'marker_' + Date.now(), name: this.newMarker.name, password: Obfuscate.encode(this.newMarker.password), role: 'marker' }); this.newMarker = { name: '', password: '' }; this.markerMsg = { type: 'success', text: 'မာကာအကောင့်ဖွင့်ပြီးပါပြီ!' }; this.saveUsers(); this.pushToCloud(); },
+        deleteMarker(id) { if (confirm('ဤမာကာကို ဖျက်မှာလား?')) { this.users.markers = this.users.markers.filter(m => m.id !== id); this.saveUsers(); this.pushToCloud(); } },
+        changeAdminPassword() { const admin = this.users.admin; if (Obfuscate.decode(admin.password) !== this.adminPasswordChange.current) { this.adminPwMsg = { type: 'error', text: 'လက်ရှိ Password မမှန်ပါ' }; return; } if (this.adminPasswordChange.new !== this.adminPasswordChange.confirm) { this.adminPwMsg = { type: 'error', text: 'Password အသစ်နှင့် ကိုက်ညီမှုမရှိပါ' }; return; } if (this.adminPasswordChange.new.length < 4) { this.adminPwMsg = { type: 'error', text: 'Password အနည်းဆုံး 4 လုံးထားပါ' }; return; } this.users.admin.password = Obfuscate.encode(this.adminPasswordChange.new); this.adminPasswordChange = { current: '', new: '', confirm: '' }; this.adminPwMsg = { type: 'success', text: 'Admin Password ပြောင်းပြီးပါပြီ!' }; this.saveUsers(); this.pushToCloud(); },
+        saveUsers() { localStorage.setItem('tiger_v80_users', JSON.stringify(this.users)); },
+        initFirebase() { const checkFirebase = setInterval(() => { if (window.firebaseDB) { clearInterval(checkFirebase); this.db = window.firebaseDB; this.syncStatus = 'online'; this.setupRealTimeListeners(); } }, 500); setTimeout(() => { if (!this.db) { clearInterval(checkFirebase); this.syncStatus = 'offline'; } }, 5000); },
+        setupRealTimeListeners() { if (!this.db) return; const tablesRef = window.firebaseDoc(this.db, 'tigers_billiards', 'tables'); this.tableListener = window.firebaseOnSnapshot(tablesRef, (doc) => { if (doc.exists()) { this.syncTablesFromCloud(doc.data()); } }, (err) => { console.error('Table listener error:', err); this.syncStatus = 'offline'; }); const dataRef = window.firebaseDoc(this.db, 'tigers_billiards', 'data'); this.dataListener = window.firebaseOnSnapshot(dataRef, (doc) => { if (doc.exists()) { this.syncDataFromCloud(doc.data()); } }, (err) => { console.error('Data listener error:', err); }); },
+
+        /**
+         * FIXED: Only apply cloud updates for tables owned by OTHER devices.
+         * Tables owned by this device are managed by the local timer.
+         * When another device closes a table (status='idle'), we reset our local copy.
+         */
+        syncTablesFromCloud(data) {
+            this.tables.forEach(t => {
+                const cloudTable = data[t.id];
+                if (!cloudTable) return;
+
+                // NEVER override tables owned by this device - local timer is source of truth
+                if (cloudTable.deviceId === this.deviceId) return;
+
+                // Another device has opened this table - sync from cloud
+                if (cloudTable.status === 'busy') {
+                    t.status = 'busy';
+                    t.elapsed = cloudTable.elapsed || 0;
+                    t.orders = cloudTable.orders || [];
+                    t.billiardCost = cloudTable.billiardCost || 0;
+                    t.total = cloudTable.total || 0;
+                    t.markerName = cloudTable.markerName || '';
+                    t.deviceId = cloudTable.deviceId || '';
+                    t.startTime = cloudTable.startTime || '';
+                }
+                // Another device closed this table - reset our local copy
+                else if (cloudTable.status === 'idle') {
+                    if (t.deviceId !== this.deviceId) {
+                        t.status = 'idle';
+                        t.elapsed = 0;
+                        t.orders = [];
+                        t.billiardCost = 0;
+                        t.total = 0;
+                        t.markerName = '';
+                        t.deviceId = '';
+                        t.startTime = '';
+                    }
+                }
+            });
+
+            // Handle special order similarly
+            const cloudSpecial = data['Order Only'];
+            if (cloudSpecial) {
+                if (cloudSpecial.deviceId === this.deviceId) {
+                    // Own special order, skip cloud update
+                    return;
+                }
+                if (cloudSpecial.status === 'busy') {
+                    this.specialOrder.status = 'busy';
+                    this.specialOrder.orders = cloudSpecial.orders || [];
+                    this.specialOrder.total = cloudSpecial.total || 0;
+                    this.specialOrder.markerName = cloudSpecial.markerName || '';
+                    this.specialOrder.deviceId = cloudSpecial.deviceId || '';
+                } else if (cloudSpecial.status === 'idle') {
+                    if (this.specialOrder.deviceId !== this.deviceId) {
+                        this.specialOrder.status = 'idle';
+                        this.specialOrder.orders = [];
+                        this.specialOrder.total = 0;
+                        this.specialOrder.markerName = '';
+                        this.specialOrder.deviceId = '';
+                    }
+                }
+            }
+        },
+
+        /**
+         * FIXED: Use timestamp-based merging to prevent duplicate data from cloud.
+         * Only add history/expense items that are newer than what we have locally.
+         */
+        syncDataFromCloud(data) {
+            const cloudTime = data.lastUpdated ? new Date(data.lastUpdated).getTime() : 0;
+            
+            if (data.history && Array.isArray(data.history)) {
+                const existingIds = new Set(this.history.map(h => h.id));
+                data.history.forEach(h => {
+                    if (!existingIds.has(h.id)) {
+                        this.history.push(h);
+                    }
+                });
+            }
+            if (data.expenses && Array.isArray(data.expenses)) {
+                // Merge expenses by checking if same date+title+amount exists
+                data.expenses.forEach(e => {
+                    const exists = this.expenses.some(ex => 
+                        ex.date === e.date && ex.title === e.title && ex.amount === e.amount
+                    );
+                    if (!exists) this.expenses.push(e);
+                });
+            }
+            if (data.monthlyHistory && Array.isArray(data.monthlyHistory)) {
+                data.monthlyHistory.forEach(m => {
+                    const exists = this.monthlyHistory.some(mx => mx.month === m.month);
+                    if (!exists) this.monthlyHistory.push(m);
+                });
+            }
+            if (data.menu && Array.isArray(data.menu) && data.menu.length > 0) this.menu = data.menu;
+            if (data.settings) this.settings = { ...this.settings, ...data.settings };
+            if (data.users) { this.users = { ...this.users, ...data.users }; this.saveUsers(); }
+            this.saveToLocalStorage();
+        },
+
+        /**
+         * FIXED: Only push tables this device owns. Uses merge:true to avoid overwriting
+         * other devices' table data. Recently-closed tables get one final push.
+         */
+        async pushTablesToCloud() {
+            if (!this.db) return;
+            try {
+                const tablesData = {};
+
+                this.tables.forEach(t => {
+                    const isOwned = t.deviceId === this.deviceId;
+                    const wasJustClosed = t._justClosed === true;
+
+                    if (isOwned || wasJustClosed) {
+                        tablesData[t.id] = {
+                            status: t.status,
+                            elapsed: t.elapsed,
+                            orders: t.orders,
+                            billiardCost: t.billiardCost,
+                            total: t.total,
+                            markerName: t.markerName,
+                            deviceId: t.deviceId,
+                            startTime: t.startTime,
+                            lastUpdated: Date.now()
+                        };
+                        if (wasJustClosed) {
+                            delete t._justClosed;
+                        }
+                    }
+                });
+
+                // Handle special order
+                const soOwned = this.specialOrder.deviceId === this.deviceId;
+                const soJustClosed = this.specialOrder._justClosed === true;
+                if (soOwned || soJustClosed) {
+                    tablesData['Order Only'] = {
+                        status: this.specialOrder.status,
+                        orders: this.specialOrder.orders,
+                        total: this.specialOrder.total,
+                        markerName: this.specialOrder.markerName,
+                        deviceId: this.specialOrder.deviceId,
+                        lastUpdated: Date.now()
+                    };
+                    if (soJustClosed) delete this.specialOrder._justClosed;
+                }
+
+                if (Object.keys(tablesData).length > 0) {
+                    const docRef = window.firebaseDoc(this.db, 'tigers_billiards', 'tables');
+                    await window.firebaseSetDoc(docRef, tablesData, { merge: true });
+                }
+            } catch (e) {
+                console.error('Push tables error:', e);
+            }
+        },
+
+        async pushToCloud() {
+            if (!this.db) { alert('Firebase မချိတ်ဆက်ထားပါ'); return; }
+            this.syncStatus = 'syncing';
+            try {
+                await this.pushTablesToCloud();
+                const docRef = window.firebaseDoc(this.db, 'tigers_billiards', 'data');
+                await window.firebaseSetDoc(docRef, {
+                    history: this.history,
+                    expenses: this.expenses,
+                    monthlyHistory: this.monthlyHistory,
+                    menu: this.menu,
+                    settings: this.settings,
+                    users: this.users,
+                    lastUpdated: new Date().toISOString()
+                });
+                this.lastSyncTime = new Date().toLocaleString();
+                this.syncStatus = 'online';
+                alert('Cloud သို့ Sync လုပ်ပြီးပါပြီ!');
+            } catch (error) {
+                console.error('Push error:', error);
+                this.syncStatus = 'offline';
+                alert('Sync မအောင်မြင်ပါ - Network စစ်ဆေးပါ');
+            }
+        },
+
+        async pullFromCloud() {
+            if (!this.db) { alert('Firebase မချိတ်ဆက်ထားပါ'); return; }
+            this.syncStatus = 'syncing';
+            try {
+                const dataRef = window.firebaseDoc(this.db, 'tigers_billiards', 'data');
+                const dataSnap = await window.firebaseGetDoc(dataRef);
+                if (dataSnap.exists()) {
+                    this.syncDataFromCloud(dataSnap.data());
+                }
+                const tablesRef = window.firebaseDoc(this.db, 'tigers_billiards', 'tables');
+                const tablesSnap = await window.firebaseGetDoc(tablesRef);
+                if (tablesSnap.exists()) {
+                    this.syncTablesFromCloud(tablesSnap.data());
+                }
+                this.lastSyncTime = new Date().toLocaleString();
+                this.syncStatus = 'online';
+                alert('Cloud မှ ဒေတာ ရယူပြီးပါပြီ!');
+            } catch (error) {
+                console.error('Pull error:', error);
+                this.syncStatus = 'offline';
+                alert('ဒေတာ ရယူ၍မရပါ - Network စစ်ဆေးပါ');
+            }
+        },
+
+        saveToLocalStorage() {
+            localStorage.setItem('tiger_v71_hist', JSON.stringify(this.history));
+            localStorage.setItem('tiger_v71_exp', JSON.stringify(this.expenses));
+            localStorage.setItem('tiger_v71_month', JSON.stringify(this.monthlyHistory));
+            localStorage.setItem('tiger_v71_menu', JSON.stringify(this.menu));
+            localStorage.setItem('tiger_v71_set', JSON.stringify(this.settings));
+        },
+
+        openTable(t) {
+            if(t.status === 'idle') {
+                if(t.id === 'Order Only' || confirm(t.id + " ဖွင့်မလား?")) {
+                    t.status='busy'; t.startTime = this.getCurrentTime();
+                    t.markerName = this.currentUser ? this.currentUser.name : '';
+                    t.deviceId = this.deviceId;
+                } else return;
+            } else if (t.status === 'busy') {
+                if (t.deviceId && t.deviceId !== this.deviceId) {
+                    if (!confirm('ဒီခုံကို ' + (t.markerName || 'အခြားမာကာ') + ' မှ ဖွင့်ထားပါသည်။ ငွေရှင်းမလား?')) return;
+                }
+            }
+            this.activeTable = t; this.view = 'order'; this.pushTablesToCloud();
+        },
+
+        addItem(it) { let ex = this.activeTable.orders.find(o => o.name === it.name); if(ex) ex.qty++; else this.activeTable.orders.push({...it, qty:1}); this.updateCosts(this.activeTable); this.pushTablesToCloud(); },
+        adjustQty(index, amt) { this.activeTable.orders[index].qty += amt; if(this.activeTable.orders[index].qty <= 0) this.activeTable.orders.splice(index, 1); this.updateCosts(this.activeTable); this.pushTablesToCloud(); },
+        updateCosts(t) { if(t.id === 'Order Only') { t.billiardCost = 0; } else { let now = new Date(); let hhmm = now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0'); let rate = (hhmm >= this.settings.hStart && hhmm <= this.settings.hEnd) ? (this.settings.rate * (1 - this.settings.disPercent/100)) : this.settings.rate; t.billiardCost = Math.round((t.elapsed/3600) * rate); } t.total = t.billiardCost + t.orders.reduce((s,o) => s + (o.price * o.qty), 0); },
+        goBill() { this.activeTable.status = 'paused'; this.view = 'bill'; this.pushTablesToCloud(); },
+
+        /**
+         * FIXED: Mark recently-closed tables with _justClosed flag so they get
+         * one final push to cloud with idle status, telling other devices to reset.
+         */
+        confirmCheckout() {
+            const tableRef = this.activeTable;
+            this.history.push({
+                id: Date.now(),
+                tableId: tableRef.id,
+                amount: tableRef.total,
+                billiardOnly: tableRef.billiardCost,
+                start: tableRef.startTime,
+                end: this.getCurrentTime(),
+                elapsed: tableRef.elapsed,
+                items: JSON.parse(JSON.stringify(tableRef.orders)),
+                rawDate: new Date().toISOString().split('T')[0],
+                markerName: tableRef.markerName || (this.currentUser ? this.currentUser.name : ''),
+                deviceId: this.deviceId
+            });
+            tableRef.status = 'idle';
+            tableRef.elapsed = 0;
+            tableRef.orders = [];
+            tableRef.markerName = '';
+            tableRef.deviceId = '';
+            tableRef._justClosed = true; // Mark for final cloud push
+            this.view = 'home';
+            this.saveToLocalStorage();
+            this.pushTablesToCloud(); // Push idle state immediately
+            this.pushToCloud();
+        },
+
+        deleteHistory(id) { if(confirm("ဤစာရင်းကို ဖျက်ရန် သေချာပါသလား?")) { this.history = this.history.filter(h => h.id !== id); this.saveToLocalStorage(); this.pushToCloud(); } },
+        exportToExcel() { if (this.filteredHistory.length === 0) return alert("ထုတ်ယူရန် ဒေတာမရှိပါ"); let csvContent = "data:text/csv;charset=utf-8,Table,Marker,Device,Start,End,Duration,Billiard,Items,Total\n"; this.sortedHistory.forEach(h => { let itemTotal = h.amount - h.billiardOnly; csvContent += `${h.tableId},${h.markerName || '-'},${h.deviceId ? h.deviceId.substring(0,6) : '-'},${h.start},${h.end},${this.formatTime(h.elapsed)},${h.billiardOnly},${itemTotal},${h.amount}\n`; }); const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", `Tigers_Report_${this.filterDate}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link); },
+        addExpense() { if(!this.newExpense.title || !this.newExpense.amount) return alert("ဖြည့်ပါ"); this.expenses.unshift({...this.newExpense}); this.newExpense = { date: new Date().toISOString().split('T')[0], title: '', amount: null }; this.saveToLocalStorage(); this.pushToCloud(); alert("သိမ်းပြီးပါပြီ"); },
+        deleteExpense(i) { if(confirm("ဖျက်မှာလား?")) { this.expenses.splice(i,1); this.saveToLocalStorage(); this.pushToCloud(); } },
+        saveMonthly() { if(!this.monthlyData.month) return alert("လရွေးပါ"); let mBills = 0, mItems = 0, mExp = 0; this.history.forEach(h => { if(h.rawDate.startsWith(this.monthlyData.month)) { mBills += h.billiardOnly; h.items.forEach(i => mItems += (i.price * i.qty)); } }); this.expenses.forEach(e => { if(e.date.startsWith(this.monthlyData.month)) { mExp += Number(e.amount); } }); let profit = (mBills + mItems) - (Number(this.monthlyData.staff) + Number(this.monthlyData.meter) + mExp); this.monthlyHistory.unshift({...this.monthlyData, billiard: mBills, items: mItems, expense: mExp, profit: profit}); this.monthlyData = { month: '', staff: 0, meter: 0 }; this.saveToLocalStorage(); this.pushToCloud(); alert("လချုပ်သိမ်းပြီးပါပြီ"); },
+        deleteMonthly(i) { if(confirm("ဖျက်မှာလား?")) { this.monthlyHistory.splice(i,1); this.saveToLocalStorage(); this.pushToCloud(); } },
+        saveSettings() { this.saveToLocalStorage(); this.pushToCloud(); alert("Saved"); },
+        addNewItem() { if(this.newItem.name && this.newItem.price) { this.menu.push({...this.newItem}); this.newItem = {name:'', price:null}; this.saveToLocalStorage(); this.pushToCloud(); } },
+        deleteMenuItem(i) { this.menu.splice(i,1); this.saveToLocalStorage(); this.pushToCloud(); }
+    },
+
+    /**
+     * FIXED: Timer only increments elapsed for tables owned by this device.
+     * Uses pushTablesToCloud which now only pushes owned tables with merge:true.
+     */
+    mounted() {
+        this.initFirebase();
+        this.timerInterval = setInterval(() => {
+            let hasActiveTable = false;
+            this.tables.forEach(t => {
+                if(t.status === 'busy' && t.deviceId === this.deviceId) {
+                    t.elapsed++;
+                    this.updateCosts(t);
+                    hasActiveTable = true;
+                }
+            });
+            // Also update special order timer if owned
+            if (this.specialOrder.status === 'busy' && this.specialOrder.deviceId === this.deviceId) {
+                this.specialOrder.elapsed++;
+                hasActiveTable = true;
+            }
+            // Push to cloud only if we have active tables (reduces writes)
+            if (hasActiveTable) {
+                this.pushTablesToCloud();
+            }
+        }, 1000);
+    },
+
+    beforeUnmount() {
+        if (this.timerInterval) clearInterval(this.timerInterval);
+        if (this.tableListener) this.tableListener();
+        if (this.dataListener) this.dataListener();
+    }
+}).mount('#app');
+</script>
+</body>
+</html>
